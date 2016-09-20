@@ -327,7 +327,8 @@ getftp (struct url *u, struct url *original_url,
   uerr_t err = RETROK;          /* appease the compiler */
   FILE *fp = NULL;
   char *respline, *tms;
-  const char *user, *passwd, *tmrate;
+  const char *tmrate;
+  struct net_credentials *ftp_cred = malloc(sizeof *ftp_cred);
   int cmd = con->cmd;
   wgint expected_bytes = 0;
   bool got_expected_bytes = false;
@@ -359,13 +360,7 @@ getftp (struct url *u, struct url *original_url,
 
   *qtyread = restval;
 
-  user = u->user;
-  passwd = u->passwd;
-  search_netrc (u->host, (const char **)&user, (const char **)&passwd, 1);
-  user = user ? user : (opt.ftp_user ? opt.ftp_user : opt.user);
-  if (!user) user = "anonymous";
-  passwd = passwd ? passwd : (opt.ftp_passwd ? opt.ftp_passwd : opt.passwd);
-  if (!passwd) passwd = "-wget@";
+  ftp_cred = pick_credentials (u, opt.ftp_user, opt.ftp_passwd, opt.user, opt.passwd, 1);
 
   dtsock = -1;
   local_sock = -1;
@@ -461,18 +456,18 @@ getftp (struct url *u, struct url *original_url,
 
       /* Second: Login with proper USER/PASS sequence.  */
       logprintf (LOG_VERBOSE, _("Logging in as %s ... "),
-                 quotearg_style (escape_quoting_style, user));
+                 quotearg_style (escape_quoting_style, ftp_cred->user));
       if (opt.server_response)
         logputs (LOG_ALWAYS, "\n");
       if (con->proxy)
         {
           /* If proxy is in use, log in as username@target-site. */
-          char *logname = concat_strings (user, "@", u->host, (char *) 0);
-          err = ftp_login (csock, logname, passwd);
+          char *logname = concat_strings (ftp_cred->user, "@", u->host, (char *) 0);
+          err = ftp_login (csock, logname, ftp_cred->passwd);
           xfree (logname);
         }
       else
-        err = ftp_login (csock, user, passwd);
+        err = ftp_login (csock, ftp_cred->user, ftp_cred->passwd);
 
       /* FTPRERR, FTPSRVERR, WRITEFAILED, FTPLOGREFUSED, FTPLOGINC */
       switch (err)

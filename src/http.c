@@ -1813,7 +1813,7 @@ time_to_rfc1123 (time_t time, char *buf, size_t bufsize)
 static struct request *
 initialize_request (const struct url *u, struct http_stat *hs, int *dt, struct url *proxy,
                     bool inhibit_keep_alive, bool *basic_auth_finished,
-                    wgint *body_data_size, char **user, char **passwd, uerr_t *ret)
+                    wgint *body_data_size, struct net_credentials **http_cred, uerr_t *ret)
 {
   bool head_only = !!(*dt & HEAD_ONLY);
   struct request *req;
@@ -1876,20 +1876,16 @@ initialize_request (const struct url *u, struct http_stat *hs, int *dt, struct u
   request_set_header (req, "Accept-Encoding", "identity", rel_none);
 
   /* Find the username and password for authentication. */
-  *user = u->user;
-  *passwd = u->passwd;
-  search_netrc (u->host, (const char **)user, (const char **)passwd, 0);
-  *user = *user ? *user : (opt.http_user ? opt.http_user : opt.user);
-  *passwd = *passwd ? *passwd : (opt.http_passwd ? opt.http_passwd : opt.passwd);
+  *http_cred = pick_credentials (u, opt.http_user, opt.http_passwd, opt.user, opt.passwd, 0);
 
   /* We only do "site-wide" authentication with "global" user/password
    * values unless --auth-no-challange has been requested; URL user/password
    * info overrides. */
-  if (*user && *passwd && (!u->user || opt.auth_without_challenge))
+  if ((*http_cred)->user && (*http_cred)->passwd && (!u->user || opt.auth_without_challenge))
     {
       /* If this is a host for which we've already received a Basic
        * challenge, we'll go ahead and send Basic authentication creds. */
-      *basic_auth_finished = maybe_send_basic_creds (u->host, *user, *passwd, req);
+      *basic_auth_finished = maybe_send_basic_creds (u->host, (*http_cred)->user, (*http_cred)->passwd, req);
     }
 
   /* Generate the Host header, HOST:PORT.  Take into account that:
@@ -2920,7 +2916,7 @@ gethttp (const struct url *u, struct url *original_url, struct http_stat *hs,
   struct request *req = NULL;
 
   char *type = NULL;
-  char *user, *passwd;
+  struct net_credentials *http_cred = malloc(sizeof *http_cred);
   char *proxyauth;
   int statcode;
   int write_error;
@@ -3029,7 +3025,7 @@ gethttp (const struct url *u, struct url *original_url, struct http_stat *hs,
     uerr_t ret;
     req = initialize_request (u, hs, dt, proxy, inhibit_keep_alive,
                               &basic_auth_finished, &body_data_size,
-                              &user, &passwd, &ret);
+                              &http_cred, &ret);
     if (req == NULL)
       {
         retval = ret;
@@ -3360,7 +3356,7 @@ gethttp (const struct url *u, struct url *original_url, struct http_stat *hs,
       pconn.authorized = false;
 
       {
-        auth_err = check_auth (u, user, passwd, resp, req,
+        auth_err = check_auth (u, http_cred->user, http_cred->passwd, resp, req,
                                &ntlm_seen, &retry,
                                &basic_auth_finished,
                                &auth_finished);

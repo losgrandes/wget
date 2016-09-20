@@ -29,6 +29,9 @@ Corresponding Source for a non-source form of such a combination
 shall include the source code for the parts of OpenSSL used as well
 as that of the covered work.  */
 
+// Include this to handle 'const struct url *' in pick_credentials()
+#include "url.h"
+
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -62,6 +65,14 @@ struct file_memory {
   long length;
   int mmap_p;
 };
+
+/* Struct and function for handling HTTP and FTP credentials */
+struct net_credentials {
+    char *user;
+    char *passwd;
+};
+
+struct net_credentials * pick_credentials (const struct url *, char *, char *, char *, char *, int);
 
 #define HYPHENP(x) (*(x) == '-' && !*((x) + 1))
 

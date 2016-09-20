@@ -440,6 +440,25 @@ fmttime (time_t t, const char *fmt)
   return output;
 }
 
+/*
+ Pick all credentials provided using --user, --password, --http-user, --http-password, --ftp-user, --ftp-password, --ask-password and from .netrc file. Select most important ones.
+ */
+struct net_credentials *
+pick_credentials (const struct url *u, char *protocol_specific_user, char *protocol_specific_passwd, char *opt_user, char *opt_passwd, int slack_default) {
+  struct net_credentials *cred = malloc(sizeof *cred);
+  cred->user = u->user;
+  cred->user = cred->user ? cred->user : (protocol_specific_user ? protocol_specific_user : opt.user);
+  cred->passwd = opt_passwd ? opt_passwd : (u->passwd ? u->passwd : protocol_specific_passwd);
+  if (!cred->user && !cred->passwd) search_netrc (u->host, (const char **)&cred->user, (const char **)&cred->passwd, slack_default);
+
+  if(slack_default) {
+    if (!cred->user) cred->user = "anonymous";
+    if (!cred->passwd) cred->passwd = "-wget@";
+  }
+
+  return cred;
+}
+
 /* Return pointer to a static char[] buffer in which zero-terminated
    string-representation of TM (in form hh:mm:ss) is printed.
 
