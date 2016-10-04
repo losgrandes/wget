@@ -662,8 +662,10 @@ log_init (const char *file, bool appendp)
         }
     }
 
+#ifndef WINDOWS
   /* Initialize this values so we don't have to ask every time we print line */
   shell_is_interactive = isatty (STDIN_FILENO);
+#endif
 }
 
 /* Close LOGFP (only if we opened it, not if it's stderr), inhibit
