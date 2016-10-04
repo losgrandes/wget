@@ -953,7 +953,11 @@ redirect_output (bool to_file, const char *signal_name)
 static void
 check_redirect_output (void)
 {
-  /* If it was redirected already to log file by SIGHUP or SIGUSR1, it was permanent */
+#ifndef WINDOWS
+  /* If it was redirected already to log file by SIGHUP or SIGUSR1, 
+   * it was permanent and since that redirect_request_signal_name is set. 
+   * If there was no SIGHUP or SIGUSR1 and shell is interactive 
+   * we check if process is fg or bg before every line is printed.*/
   if(!redirect_request_signal_name && shell_is_interactive)
     {
       if(tcgetpgrp(STDIN_FILENO) != getpgrp()) 
@@ -967,4 +971,5 @@ check_redirect_output (void)
           redirect_output(false,NULL);
         }
     }
+#endif /* WINDOWS */
 }
