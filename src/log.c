@@ -629,7 +629,7 @@ log_init (const char *file, bool appendp)
       else
         {
           filelogfp = fopen (file, appendp ? "a" : "w");
-          if (!logfp)
+          if (!filelogfp)
             {
               fprintf (stderr, "%s: %s: %s\n", exec_name, file, strerror (errno));
               exit (WGET_EXIT_GENERIC_ERROR);
