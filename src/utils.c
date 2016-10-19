@@ -445,13 +445,13 @@ fmttime (time_t t, const char *fmt)
  */
 struct net_credentials *
 pick_credentials (const struct url *u, char *protocol_specific_user, char *protocol_specific_passwd, char *opt_user, char *opt_passwd, int slack_default) {
-  struct net_credentials *cred = malloc(sizeof *cred);
+  struct net_credentials *cred = malloc (sizeof *cred);
   cred->user = u->user;
   cred->user = cred->user ? cred->user : (protocol_specific_user ? protocol_specific_user : opt.user);
   cred->passwd = opt_passwd ? opt_passwd : (u->passwd ? u->passwd : protocol_specific_passwd);
   if (!cred->user && !cred->passwd) search_netrc (u->host, (const char **)&cred->user, (const char **)&cred->passwd, slack_default);
 
-  if(slack_default) {
+  if (slack_default) {
     if (!cred->user) cred->user = "anonymous";
     if (!cred->passwd) cred->passwd = "-wget@";
   }

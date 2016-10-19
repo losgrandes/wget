@@ -2916,7 +2916,7 @@ gethttp (const struct url *u, struct url *original_url, struct http_stat *hs,
   struct request *req = NULL;
 
   char *type = NULL;
-  struct net_credentials *http_cred = malloc(sizeof *http_cred);
+  struct net_credentials *http_cred = malloc (sizeof *http_cred);
   char *proxyauth;
   int statcode;
   int write_error;

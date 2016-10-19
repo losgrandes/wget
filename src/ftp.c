@@ -328,7 +328,7 @@ getftp (struct url *u, struct url *original_url,
   FILE *fp = NULL;
   char *respline, *tms;
   const char *tmrate;
-  struct net_credentials *ftp_cred = malloc(sizeof *ftp_cred);
+  struct net_credentials *ftp_cred = malloc (sizeof *ftp_cred);
   int cmd = con->cmd;
   wgint expected_bytes = 0;
   bool got_expected_bytes = false;
