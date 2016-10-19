@@ -1229,7 +1229,7 @@ Error in server response, closing control connection.\n"));
           con->csock = -1;
           fd_close (dtsock);
           fd_close (local_sock);
-          if(all_exist) {
+          if (all_exist) {
               return RETRFINISHED;
           } else {
               return FTPNSFOD;
